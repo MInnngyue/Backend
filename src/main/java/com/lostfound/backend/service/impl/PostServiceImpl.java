@@ -84,6 +84,18 @@ public class PostServiceImpl implements PostService {
         post.setViewCount(0);
         post.setReviewStatus(0);
         postMapper.insert(post);
+
+        // 保存图片
+        if (dto.getImages() != null) {
+            for (int i = 0; i < dto.getImages().length; i++) {
+                PostImage img = new PostImage();
+                img.setPostId(post.getId());
+                img.setImageUrl(dto.getImages()[i]);
+                img.setSortOrder(i);
+                postImageMapper.insert(img);
+            }
+        }
+
         return toVO(post);
     }
 

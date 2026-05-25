@@ -29,4 +29,5 @@ public class PostPublishDTO {
 
     private String title;
     private String description;
+    private String[] images;
 }
