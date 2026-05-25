@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lostfound.backend.mapper.PostMapper">
+
+    <select id="selectPostPage" resultType="com.lostfound.backend.entity.Post">
+        SELECT p.* FROM post p
+        WHERE p.deleted = 0
+        AND p.review_status IN (0, 1)
+        <if test="type != null">
+            AND p.type = #{type}
+        </if>
+        <if test="itemCategory != null and itemCategory != ''">
+            AND p.item_category = #{itemCategory}
+        </if>
+        <if test="status != null">
+            AND p.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+                 OR p.description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY p.create_time DESC
+    </select>
+
+</mapper>
