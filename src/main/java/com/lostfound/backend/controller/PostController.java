@@ -1,10 +1,12 @@
 package com.lostfound.backend.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lostfound.backend.common.exception.BusinessException;
 import com.lostfound.backend.common.result.Result;
 import com.lostfound.backend.dto.PostPublishDTO;
 import com.lostfound.backend.dto.PostQueryDTO;
 import com.lostfound.backend.entity.User;
+import com.lostfound.backend.service.CreditScoreService;
 import com.lostfound.backend.service.PostService;
 import com.lostfound.backend.vo.PostVO;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
 
     private final PostService postService;
+    private final CreditScoreService creditScoreService;
 
     @GetMapping
     public Result<Page<PostVO>> list(PostQueryDTO query) {
@@ -31,8 +34,19 @@ public class PostController {
 
     @PostMapping
     public Result<PostVO> publish(@Valid @RequestBody PostPublishDTO dto, Authentication auth) {
-        Long userId = ((User) auth.getPrincipal()).getId();
-        return Result.success(postService.publish(userId, dto));
+        User user = (User) auth.getPrincipal();
+        if (!creditScoreService.canPublish(user)) {
+            throw new BusinessException(403, "信用分不足60，无法发布帖子");
+        }
+        return Result.success(postService.publish(user.getId(), dto));
+    }
+
+    /** 手动标记帖子为已完成（发布者操作） */
+    @PutMapping("/{id}/complete")
+    public Result<Void> complete(@PathVariable Long id, Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        postService.complete(id, user.getId());
+        return Result.success(null);
     }
 
     @DeleteMapping("/{id}")

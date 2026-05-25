@@ -14,4 +14,6 @@ public interface PostService {
     PostVO publish(Long userId, PostPublishDTO dto);
 
     void remove(Long id, Long userId);
+
+    void complete(Long id, Long userId);
 }

@@ -111,6 +111,16 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public void complete(Long id, Long userId) {
+        Post post = postMapper.selectById(id);
+        if (post == null) throw new BusinessException(404, "帖子不存在");
+        if (!post.getUserId().equals(userId)) throw new BusinessException(403, "无权操作");
+        if (post.getStatus() != 0 && post.getStatus() != 1) throw new BusinessException(400, "当前状态不可完结");
+        post.setStatus(3);
+        postMapper.updateById(post);
+    }
+
+    @Override
     public void remove(Long id, Long userId) {
         Post post = postMapper.selectById(id);
         if (post == null) {
