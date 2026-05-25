@@ -162,38 +162,14 @@ OPTIONS 请求全部放行
 
 ## 当前开发状态
 
-### 已完成
-- [x] Spring Boot 3.5 + Spring Security 骨架
-- [x] JWT 无状态认证（签发 + 验证 + 拦截）
-- [x] BCrypt 密码加密
-- [x] 用户注册/登录 API
-- [x] 统一响应体 `Result<T>`
-- [x] 全局异常处理
-- [x] MyBatis Plus 自动填充 + 逻辑删除
-- [x] CORS 跨域支持
-- [x] Knife4j 在线 API 文档
-- [x] 用户表 `user`
-
-### 待开发（按优先级）
-
-- [ ] **帖子表** `post`：type/status/item_category/color/location/lost_time/user_id
-- [ ] **数据字典表** `category`：物品大类/颜色/地点（三级树形）
-- [ ] **帖子图片表** `post_image`
-- [ ] **评论表** `comment`
-- [ ] **消息通知表** `message`
-- [ ] **匹配记录表** `match_record`
-- [ ] **认领记录表** `claim_record`
-- [ ] **操作日志表** `system_log`
-- [ ] 帖子 CRUD API（发布/列表/详情/编辑/下架）
-- [ ] 数据字典 API（级联查询）
-- [ ] 匹配算法服务（梯度权重评分引擎）
-- [ ] 匹配 API（手动触发 + 定时补偿任务）
-- [ ] 文件上传 API（OSS 或本地存储）
-- [ ] 信用分体系（增减规则 + 权限分层 AOP）
-- [ ] 认领状态机（枚举 + 双确认机制）
-- [ ] 管理端 API（用户管理/审核/统计/日志）
-- [ ] RBAC 权限注解（`@PreAuthorize`）
-- [ ] 单元测试 + 接口测试
+### 已完成（5个阶段）
+- [x] 阶段一：数据字典 + 帖子 CRUD + 图片上传
+- [x] 阶段二：梯度权重匹配引擎（40/30/20/10）+ 消息通知 + @Scheduled 补偿
+- [x] 阶段三：信用分体系 + 认领状态机 + 双确认
+- [x] 阶段四：管理端（审核/用户管理/字典/统计）
+- [x] 阶段五：JUnit 匹配算法测试（3 用例全部通过）
+- [x] 全部业务表：category, post, post_image, match_record, message, claim
+- [x] API：Auth, Post(CRUD+分页+完结), Category, Claim, Message, File(上传), Admin(审核/用户/字典/统计)
 
 ## 开发规范
 
