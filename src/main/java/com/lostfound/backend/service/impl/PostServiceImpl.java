@@ -15,11 +15,13 @@ import com.lostfound.backend.service.MatchingService;
 import com.lostfound.backend.service.PostService;
 import com.lostfound.backend.vo.PostVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -98,8 +100,12 @@ public class PostServiceImpl implements PostService {
             }
         }
 
-        // 异步触发匹配
-        matchingService.match(post);
+        // 异步触发匹配（异常不影响发布）
+        try {
+            matchingService.match(post);
+        } catch (Exception e) {
+            log.warn("匹配计算异常: {}", e.getMessage());
+        }
 
         return toVO(post);
     }
