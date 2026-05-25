@@ -1,13 +1,13 @@
 package com.lostfound.backend.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lostfound.backend.dto.PostPublishDTO;
 import com.lostfound.backend.dto.PostQueryDTO;
 import com.lostfound.backend.vo.PostVO;
 
 public interface PostService {
 
-    IPage<PostVO> page(PostQueryDTO query);
+    Page<PostVO> page(PostQueryDTO query);
 
     PostVO detail(Long id);
 

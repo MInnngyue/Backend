@@ -21,7 +21,7 @@ spring:
 # ✅ MyBatis Plus 完整配置
 mybatis-plus:
   # XML映射文件位置（有XML才需要，注解方式可省略）
-  mapper-locations: classpath*:mapper/**/*.xml
+  mapper-locations: classpath:mapper/*.xml
   # 实体类包路径（开启别名，XML里可以直接写User而不是全路径）
   type-aliases-package: com.lostfound.backend.entity
   configuration:

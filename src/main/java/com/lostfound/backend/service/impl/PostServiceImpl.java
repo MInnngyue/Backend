@@ -1,7 +1,6 @@
 package com.lostfound.backend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lostfound.backend.common.exception.BusinessException;
 import com.lostfound.backend.dto.PostPublishDTO;
@@ -18,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -27,12 +28,26 @@ public class PostServiceImpl implements PostService {
     private final UserMapper userMapper;
 
     @Override
-    public IPage<PostVO> page(PostQueryDTO query) {
-        Page<Post> page = new Page<>(query.getPage(), query.getPageSize());
-        IPage<Post> postPage = postMapper.selectPostPage(page,
-                query.getType(), query.getItemCategory(), query.getStatus(), query.getKeyword());
+    public Page<PostVO> page(PostQueryDTO query) {
+        LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
+                .eq(query.getType() != null, Post::getType, query.getType())
+                .eq(query.getItemCategory() != null && !query.getItemCategory().isEmpty(),
+                        Post::getItemCategory, query.getItemCategory())
+                .eq(query.getStatus() != null, Post::getStatus, query.getStatus())
+                .and(query.getKeyword() != null && !query.getKeyword().isEmpty(),
+                        w -> w.like(Post::getTitle, query.getKeyword())
+                             .or()
+                             .like(Post::getDescription, query.getKeyword()))
+                .orderByDesc(Post::getCreateTime);
 
-        return postPage.convert(this::toVO);
+        long total = postMapper.selectCount(wrapper);
+        int offset = (query.getPage() - 1) * query.getPageSize();
+        List<Post> records = postMapper.selectList(
+                wrapper.last("LIMIT " + offset + "," + query.getPageSize()));
+
+        Page<PostVO> result = new Page<>(query.getPage(), query.getPageSize(), total);
+        result.setRecords(records.stream().map(this::toVO).toList());
+        return result;
     }
 
     @Override
