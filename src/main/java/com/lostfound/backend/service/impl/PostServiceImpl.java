@@ -11,6 +11,7 @@ import com.lostfound.backend.entity.User;
 import com.lostfound.backend.mapper.PostImageMapper;
 import com.lostfound.backend.mapper.PostMapper;
 import com.lostfound.backend.mapper.UserMapper;
+import com.lostfound.backend.service.MatchingService;
 import com.lostfound.backend.service.PostService;
 import com.lostfound.backend.vo.PostVO;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final PostImageMapper postImageMapper;
     private final UserMapper userMapper;
+    private final MatchingService matchingService;
 
     @Override
     public Page<PostVO> page(PostQueryDTO query) {
@@ -95,6 +97,9 @@ public class PostServiceImpl implements PostService {
                 postImageMapper.insert(img);
             }
         }
+
+        // 异步触发匹配
+        matchingService.match(post);
 
         return toVO(post);
     }
