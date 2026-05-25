@@ -37,7 +37,7 @@ mybatis-plus:
 # JWT配置
 jwt:
   secret: lost-found-platform-secret-key-2024-very-long-string
-  access-token-expire: 7200       # AccessToken过期时间(秒) 2小时
+  access-token-expire: 86400       # AccessToken过期时间(秒) 24小时（开发期）
   refresh-token-expire: 604800    # RefreshToken过期时间(秒) 7天
 
 # 文件存储配置
