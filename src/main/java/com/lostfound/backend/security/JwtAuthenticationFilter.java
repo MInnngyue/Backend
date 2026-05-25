@@ -40,20 +40,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authorization.substring(7);
 
         if (!jwtUtil.validateToken(token)) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"Token已过期或无效，请重新登录\"}");
             return;
         }
 
         Long userId = jwtUtil.getUserId(token);
         User user = userMapper.selectById(userId);
 
-        if (user == null || user.getDeleted() != null && user.getDeleted() == 1) {
-            filterChain.doFilter(request, response);
+        if (user == null || (user.getDeleted() != null && user.getDeleted() == 1)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"用户不存在\"}");
             return;
         }
 
         if (user.getStatus() != null && user.getStatus() == 1) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"账号已被禁用\"}");
             return;
         }
 
