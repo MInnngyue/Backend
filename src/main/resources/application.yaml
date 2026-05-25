@@ -42,8 +42,7 @@ jwt:
 
 # 文件存储配置
 file:
-  # ✅ 用相对路径，Windows/Linux都能跑
-  upload-path: ./uploads/
+  upload-dir: C:/Users/kangc/backend/uploads
   access-path: /uploads/
 
 # Knife4j 文档配置
