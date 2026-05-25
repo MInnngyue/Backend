@@ -137,13 +137,13 @@ public class PostServiceImpl implements PostService {
             vo.setCreditScore(user.getCreditScore());
         }
 
-        // 封面图（第一张）
-        PostImage firstImage = postImageMapper.selectOne(new LambdaQueryWrapper<PostImage>()
+        // 所有图片
+        List<PostImage> images = postImageMapper.selectList(new LambdaQueryWrapper<PostImage>()
                 .eq(PostImage::getPostId, post.getId())
-                .orderByAsc(PostImage::getSortOrder)
-                .last("LIMIT 1"));
-        if (firstImage != null) {
-            vo.setCoverImage(firstImage.getImageUrl());
+                .orderByAsc(PostImage::getSortOrder));
+        if (!images.isEmpty()) {
+            vo.setCoverImage(images.get(0).getImageUrl());
+            vo.setImages(images.stream().map(PostImage::getImageUrl).toList());
         }
 
         return vo;

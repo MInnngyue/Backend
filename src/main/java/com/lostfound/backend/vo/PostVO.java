@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class PostVO {
@@ -22,6 +23,7 @@ public class PostVO {
     private Integer viewCount;
     private Integer reviewStatus;
     private String coverImage;
+    private List<String> images;
 
     private Long userId;
     private String nickname;
