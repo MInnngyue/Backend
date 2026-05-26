@@ -65,6 +65,7 @@ public class User {
     private LocalDateTime banUntil;
     private Integer blacklisted;
     private LocalDateTime blacklistUntil;
+    private String signature;
 
     /**
      * 逻辑删除：0 正常，1 删除

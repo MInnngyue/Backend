@@ -26,4 +26,6 @@ public class UserInfoVO {
     private Integer creditScore;
 
     private Integer successCount;
+
+    private String signature;
 }

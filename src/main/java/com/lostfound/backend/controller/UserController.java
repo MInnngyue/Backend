@@ -31,6 +31,7 @@ public class UserController {
                 .status(user.getStatus())
                 .creditScore(user.getCreditScore())
                 .successCount(user.getSuccessCount())
+                .signature(user.getSignature())
                 .build();
 
         return Result.success(vo);
