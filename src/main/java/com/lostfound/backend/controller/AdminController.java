@@ -7,6 +7,7 @@ import com.lostfound.backend.common.result.Result;
 import com.lostfound.backend.entity.*;
 import com.lostfound.backend.mapper.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -22,19 +23,23 @@ public class AdminController {
     private final MessageMapper messageMapper;
 
     // ============ 权限检查 ============
-    private void checkAdmin(User user) {
+    private User requireAdmin(Authentication auth) {
+        User user = (User) auth.getPrincipal();
         if (user.getRole() == null || user.getRole() != 1) {
             throw new BusinessException(403, "需要管理员权限");
         }
+        return user;
     }
 
     // ============ 帖子审核 ============
 
     /** 待审核帖子列表 */
     @GetMapping("/posts/pending")
-    public Result<Page<Post>> pendingPosts(@RequestParam(defaultValue = "1") int page,
+    public Result<Page<Post>> pendingPosts(Authentication auth,
+                                           @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int size,
                                            @RequestParam(required = false) Integer reviewStatus) {
+        requireAdmin(auth);
         Page<Post> p = new Page<>(page, size);
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
                 .eq(reviewStatus != null, Post::getReviewStatus, reviewStatus)
@@ -45,7 +50,8 @@ public class AdminController {
 
     /** 审核通过 */
     @PutMapping("/posts/{id}/approve")
-    public Result<Void> approve(@PathVariable Long id) {
+    public Result<Void> approve(Authentication auth, @PathVariable Long id) {
+        requireAdmin(auth);
         Post post = postMapper.selectById(id);
         if (post == null) throw new BusinessException(404, "帖子不存在");
         post.setReviewStatus(1);
@@ -55,7 +61,8 @@ public class AdminController {
 
     /** 审核拒绝 */
     @PutMapping("/posts/{id}/reject")
-    public Result<Void> reject(@PathVariable Long id, @RequestParam(defaultValue = "违规内容") String reason) {
+    public Result<Void> reject(Authentication auth, @PathVariable Long id, @RequestParam(defaultValue = "违规内容") String reason) {
+        requireAdmin(auth);
         Post post = postMapper.selectById(id);
         if (post == null) throw new BusinessException(404, "帖子不存在");
         post.setReviewStatus(2);
@@ -68,8 +75,10 @@ public class AdminController {
     // ============ 用户管理 ============
 
     @GetMapping("/users")
-    public Result<Page<User>> users(@RequestParam(defaultValue = "1") int page,
+    public Result<Page<User>> users(Authentication auth,
+                                    @RequestParam(defaultValue = "1") int page,
                                     @RequestParam(defaultValue = "10") int size) {
+        requireAdmin(auth);
         Page<User> p = new Page<>(page, size);
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<User>()
                 .orderByDesc(User::getCreateTime);
@@ -77,7 +86,8 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/freeze")
-    public Result<Void> freezeUser(@PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
+    public Result<Void> freezeUser(Authentication auth, @PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
+        requireAdmin(auth);
         User user = userMapper.selectById(id);
         if (user == null) throw new BusinessException(404, "用户不存在");
         if (user.getStatus() == 1) {
@@ -92,7 +102,8 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/blacklist")
-    public Result<Void> blacklistUser(@PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
+    public Result<Void> blacklistUser(Authentication auth, @PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
+        requireAdmin(auth);
         User user = userMapper.selectById(id);
         if (user == null) throw new BusinessException(404, "用户不存在");
         if (user.getBlacklisted() != null && user.getBlacklisted() == 1) {
@@ -107,7 +118,8 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/credit")
-    public Result<Void> adjustCredit(@PathVariable Long id, @RequestParam int delta) {
+    public Result<Void> adjustCredit(Authentication auth, @PathVariable Long id, @RequestParam int delta) {
+        requireAdmin(auth);
         User user = userMapper.selectById(id);
         if (user == null) throw new BusinessException(404, "用户不存在");
         int newScore = Math.max(0, Math.min(120, user.getCreditScore() + delta));
@@ -119,26 +131,30 @@ public class AdminController {
     // ============ 数据字典 ============
 
     @GetMapping("/dict")
-    public Result<List<Category>> dictList(@RequestParam String type) {
+    public Result<List<Category>> dictList(Authentication auth, @RequestParam String type) {
+        requireAdmin(auth);
         return Result.success(categoryMapper.selectList(new LambdaQueryWrapper<Category>()
                 .eq(Category::getType, type).orderByAsc(Category::getSortOrder)));
     }
 
     @PostMapping("/dict")
-    public Result<Category> dictAdd(@RequestBody Category category) {
+    public Result<Category> dictAdd(Authentication auth, @RequestBody Category category) {
+        requireAdmin(auth);
         categoryMapper.insert(category);
         return Result.success(category);
     }
 
     @PutMapping("/dict/{id}")
-    public Result<Void> dictUpdate(@PathVariable Long id, @RequestBody Category category) {
+    public Result<Void> dictUpdate(Authentication auth, @PathVariable Long id, @RequestBody Category category) {
+        requireAdmin(auth);
         category.setId(id);
         categoryMapper.updateById(category);
         return Result.success(null);
     }
 
     @DeleteMapping("/dict/{id}")
-    public Result<Void> dictDelete(@PathVariable Long id) {
+    public Result<Void> dictDelete(Authentication auth, @PathVariable Long id) {
+        requireAdmin(auth);
         categoryMapper.deleteById(id);
         return Result.success(null);
     }
@@ -146,9 +162,11 @@ public class AdminController {
     // ============ 归档管理 ============
 
     @GetMapping("/posts/all")
-    public Result<Page<Post>> allPosts(@RequestParam(defaultValue = "1") int page,
+    public Result<Page<Post>> allPosts(Authentication auth,
+                                       @RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "20") int size,
                                        @RequestParam(required = false) Integer status) {
+        requireAdmin(auth);
         Page<Post> p = new Page<>(page, size);
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
                 .eq(status != null, Post::getStatus, status)
@@ -157,7 +175,8 @@ public class AdminController {
     }
 
     @PutMapping("/posts/{id}/archive")
-    public Result<Void> archive(@PathVariable Long id) {
+    public Result<Void> archive(Authentication auth, @PathVariable Long id) {
+        requireAdmin(auth);
         Post post = postMapper.selectById(id);
         if (post == null) throw new BusinessException(404, "帖子不存在");
         post.setStatus(4); // 已过期/归档
@@ -168,7 +187,8 @@ public class AdminController {
     // ============ 数据统计 ============
 
     @GetMapping("/stats")
-    public Result<Map<String, Object>> stats() {
+    public Result<Map<String, Object>> stats(Authentication auth) {
+        requireAdmin(auth);
         Map<String, Object> data = new LinkedHashMap<>();
 
         data.put("totalPosts", postMapper.selectCount(null));

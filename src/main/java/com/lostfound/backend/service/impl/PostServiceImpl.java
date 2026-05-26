@@ -47,8 +47,9 @@ public class PostServiceImpl implements PostService {
 
         long total = postMapper.selectCount(wrapper);
         int offset = (query.getPage() - 1) * query.getPageSize();
+        // 安全：offset 和 pageSize 均为 int 类型，String.format %d 强制整数格式化
         List<Post> records = postMapper.selectList(
-                wrapper.last("LIMIT " + offset + "," + query.getPageSize()));
+                wrapper.last(String.format("LIMIT %d,%d", offset, query.getPageSize())));
 
         Page<PostVO> result = new Page<>(query.getPage(), query.getPageSize(), total);
         result.setRecords(records.stream().map(this::toVO).toList());
