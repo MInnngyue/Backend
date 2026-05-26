@@ -34,6 +34,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public Page<PostVO> page(PostQueryDTO query) {
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
+                .notIn(Post::getStatus, 4, 5)
                 .eq(query.getType() != null, Post::getType, query.getType())
                 .eq(query.getItemCategory() != null && !query.getItemCategory().isEmpty(),
                         Post::getItemCategory, query.getItemCategory())
