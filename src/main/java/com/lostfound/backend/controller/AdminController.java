@@ -77,10 +77,31 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/freeze")
-    public Result<Void> freezeUser(@PathVariable Long id) {
+    public Result<Void> freezeUser(@PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
         User user = userMapper.selectById(id);
         if (user == null) throw new BusinessException(404, "用户不存在");
-        user.setStatus(user.getStatus() == 1 ? 0 : 1);
+        if (user.getStatus() == 1) {
+            user.setStatus(0);
+            user.setBanUntil(null);
+        } else {
+            user.setStatus(1);
+            if (days > 0) user.setBanUntil(java.time.LocalDateTime.now().plusDays(days));
+        }
+        userMapper.updateById(user);
+        return Result.success(null);
+    }
+
+    @PutMapping("/users/{id}/blacklist")
+    public Result<Void> blacklistUser(@PathVariable Long id, @RequestParam(defaultValue = "0") int days) {
+        User user = userMapper.selectById(id);
+        if (user == null) throw new BusinessException(404, "用户不存在");
+        if (user.getBlacklisted() != null && user.getBlacklisted() == 1) {
+            user.setBlacklisted(0);
+            user.setBlacklistUntil(null);
+        } else {
+            user.setBlacklisted(1);
+            if (days > 0) user.setBlacklistUntil(java.time.LocalDateTime.now().plusDays(days));
+        }
         userMapper.updateById(user);
         return Result.success(null);
     }

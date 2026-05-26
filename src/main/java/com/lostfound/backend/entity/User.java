@@ -62,6 +62,10 @@ public class User {
      */
     private Integer successCount;
 
+    private LocalDateTime banUntil;
+    private Integer blacklisted;
+    private LocalDateTime blacklistUntil;
+
     /**
      * 逻辑删除：0 正常，1 删除
      */
