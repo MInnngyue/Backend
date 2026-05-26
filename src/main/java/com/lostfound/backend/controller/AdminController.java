@@ -122,6 +122,28 @@ public class AdminController {
         return Result.success(null);
     }
 
+    // ============ 归档管理 ============
+
+    @GetMapping("/posts/all")
+    public Result<Page<Post>> allPosts(@RequestParam(defaultValue = "1") int page,
+                                       @RequestParam(defaultValue = "20") int size,
+                                       @RequestParam(required = false) Integer status) {
+        Page<Post> p = new Page<>(page, size);
+        LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
+                .eq(status != null, Post::getStatus, status)
+                .orderByDesc(Post::getCreateTime);
+        return Result.success(postMapper.selectPage(p, wrapper));
+    }
+
+    @PutMapping("/posts/{id}/archive")
+    public Result<Void> archive(@PathVariable Long id) {
+        Post post = postMapper.selectById(id);
+        if (post == null) throw new BusinessException(404, "帖子不存在");
+        post.setStatus(4); // 已过期/归档
+        postMapper.updateById(post);
+        return Result.success(null);
+    }
+
     // ============ 数据统计 ============
 
     @GetMapping("/stats")
