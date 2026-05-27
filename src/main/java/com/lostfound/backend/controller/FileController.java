@@ -1,7 +1,9 @@
 package com.lostfound.backend.controller;
 
 import com.lostfound.backend.common.result.Result;
+import com.lostfound.backend.entity.User;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +27,11 @@ public class FileController {
     private static final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
     @PostMapping
-    public Result<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) {
+    public Result<Map<String, Object>> upload(@RequestParam("file") MultipartFile file,
+                                               Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return Result.fail(401, "请先登录");
+        }
         if (file.isEmpty()) {
             return Result.fail(400, "文件为空");
         }

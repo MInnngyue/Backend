@@ -37,25 +37,24 @@ public class MessageController {
     }
 
     @PutMapping("/{id}/read")
-    public Result<Void> markRead(@PathVariable Long id) {
+    public Result<Void> markRead(@PathVariable Long id, Authentication auth) {
+        Long userId = ((User) auth.getPrincipal()).getId();
         Message msg = messageMapper.selectById(id);
-        if (msg != null) {
-            msg.setIsRead(1);
-            messageMapper.updateById(msg);
-        }
+        if (msg == null) return Result.fail(404, "消息不存在");
+        if (!msg.getToUserId().equals(userId))
+            return Result.fail(403, "无权操作");
+        msg.setIsRead(1);
+        messageMapper.updateById(msg);
         return Result.success(null);
     }
 
     @PutMapping("/read-all")
     public Result<Void> markAllRead(Authentication auth) {
         Long userId = ((User) auth.getPrincipal()).getId();
-        List<Message> unread = messageMapper.selectList(new LambdaQueryWrapper<Message>()
+        messageMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Message>()
                 .eq(Message::getToUserId, userId)
-                .eq(Message::getIsRead, 0));
-        for (Message msg : unread) {
-            msg.setIsRead(1);
-            messageMapper.updateById(msg);
-        }
+                .eq(Message::getIsRead, 0)
+                .set(Message::getIsRead, 1));
         return Result.success(null);
     }
 }

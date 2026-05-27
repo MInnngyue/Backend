@@ -27,7 +27,7 @@ public class ClaimService {
     private final CreditScoreService creditScoreService;
 
     /** 发起认领 */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Claim createClaim(Long claimUserId, Long postId, Long matchId) {
         Post post = postMapper.selectById(postId);
         if (post == null) throw new BusinessException(404, "帖子不存在");
@@ -37,6 +37,7 @@ public class ClaimService {
             throw new BusinessException(400, "帖子状态不允许认领");
 
         User claimer = userMapper.selectById(claimUserId);
+        if (claimer == null) throw new BusinessException(404, "用户不存在");
         if (!creditScoreService.canClaim(claimer))
             throw new BusinessException(403, "信用分不足80，无法发起认领");
 
@@ -74,7 +75,7 @@ public class ClaimService {
     }
 
     /** 取消认领（双方均可取消） */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Claim cancelClaim(Long claimId, Long userId) {
         Claim claim = claimMapper.selectById(claimId);
         if (claim == null) throw new BusinessException(404, "认领记录不存在");
@@ -122,7 +123,7 @@ public class ClaimService {
     }
 
     /** 确认认领（发布者或认领者点击确认） */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Claim confirm(Long claimId, Long userId) {
         Claim claim = claimMapper.selectById(claimId);
         if (claim == null) throw new BusinessException(404, "认领记录不存在");
