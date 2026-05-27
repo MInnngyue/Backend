@@ -55,4 +55,10 @@ public class PostController {
         postService.remove(id, userId);
         return Result.success(null);
     }
+
+    @PutMapping("/{id}")
+    public Result<PostVO> update(@PathVariable Long id, @Valid @RequestBody PostPublishDTO dto, Authentication auth) {
+        Long userId = ((User) auth.getPrincipal()).getId();
+        return Result.success(postService.update(id, userId, dto));
+    }
 }

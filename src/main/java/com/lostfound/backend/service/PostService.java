@@ -16,4 +16,6 @@ public interface PostService {
     void remove(Long id, Long userId);
 
     void complete(Long id, Long userId);
+
+    PostVO update(Long id, Long userId, PostPublishDTO dto);
 }

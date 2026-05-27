@@ -123,6 +123,40 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public PostVO update(Long id, Long userId, PostPublishDTO dto) {
+        Post post = postMapper.selectById(id);
+        if (post == null) throw new BusinessException(404, "帖子不存在");
+        if (!post.getUserId().equals(userId)) throw new BusinessException(403, "无权操作");
+
+        post.setType(dto.getType());
+        post.setItemCategory(dto.getItemCategory());
+        post.setColor(dto.getColor());
+        post.setLocationCampus(dto.getLocationCampus());
+        post.setLocationArea(dto.getLocationArea());
+        post.setLocationDetail(dto.getLocationDetail());
+        post.setLostTime(dto.getLostTime());
+        post.setTitle(dto.getTitle());
+        post.setDescription(dto.getDescription());
+        postMapper.updateById(post);
+
+        // 更新图片：只有提供了新图片才更新
+        if (dto.getImages() != null && dto.getImages().length > 0) {
+            postImageMapper.delete(new LambdaQueryWrapper<PostImage>()
+                    .eq(PostImage::getPostId, post.getId()));
+            for (int i = 0; i < dto.getImages().length; i++) {
+                PostImage img = new PostImage();
+                img.setPostId(post.getId());
+                img.setImageUrl(dto.getImages()[i]);
+                img.setSortOrder(i);
+                postImageMapper.insert(img);
+            }
+        }
+
+        return toVO(post);
+    }
+
+    @Override
     public void remove(Long id, Long userId) {
         Post post = postMapper.selectById(id);
         if (post == null) {
