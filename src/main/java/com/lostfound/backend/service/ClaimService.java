@@ -64,10 +64,58 @@ public class ClaimService {
             claimerName + " 对你的帖子「" + post.getTitle() + "」发起了认领申请，请前往认领进度页面确认",
             postId);
 
-        // 更新帖子状态为认领中
-        if (post.getStatus() == 1) {
+        // 更新帖子状态为认领中（状态0和1都可进入认领中2）
+        if (post.getStatus() == 0 || post.getStatus() == 1) {
             post.setStatus(2);
             postMapper.updateById(post);
+        }
+
+        return claim;
+    }
+
+    /** 取消认领（双方均可取消） */
+    @Transactional
+    public Claim cancelClaim(Long claimId, Long userId) {
+        Claim claim = claimMapper.selectById(claimId);
+        if (claim == null) throw new BusinessException(404, "认领记录不存在");
+        if (claim.getStatus() == 2)
+            throw new BusinessException(400, "认领已完结，无法取消");
+        if (claim.getStatus() == 3)
+            throw new BusinessException(400, "认领已取消");
+
+        boolean isOwner = userId.equals(claim.getPostOwnerId());
+        boolean isClaimer = userId.equals(claim.getClaimUserId());
+        if (!isOwner && !isClaimer)
+            throw new BusinessException(403, "无权操作");
+
+        claim.setStatus(3); // 已取消
+        claimMapper.updateById(claim);
+
+        // 检查该帖子是否还有其他进行中的认领
+        Long activeCount = claimMapper.selectCount(new LambdaQueryWrapper<Claim>()
+                .eq(Claim::getPostId, claim.getPostId())
+                .in(Claim::getStatus, 0, 1));
+        if (activeCount == 0) {
+            // 没有其他进行中的认领，帖子退出认领中状态
+            Post post = postMapper.selectById(claim.getPostId());
+            if (post != null && post.getStatus() == 2) {
+                post.setStatus(1); // 回到已匹配
+                postMapper.updateById(post);
+            }
+        }
+
+        // 通知对方
+        String cancelerName;
+        if (isOwner) {
+            User u = userMapper.selectById(claim.getClaimUserId());
+            cancelerName = "发布者";
+            sendNotification(claim.getClaimUserId(), "认领已取消",
+                "发布者取消了该认领，你可重新发起认领", claim.getPostId());
+        } else {
+            User u = userMapper.selectById(claim.getPostOwnerId());
+            cancelerName = "认领者";
+            sendNotification(claim.getPostOwnerId(), "认领已取消",
+                "认领者取消了该认领", claim.getPostId());
         }
 
         return claim;

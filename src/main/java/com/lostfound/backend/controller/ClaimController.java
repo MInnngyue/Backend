@@ -41,6 +41,12 @@ public class ClaimController {
         return Result.success(claimService.confirm(id, userId));
     }
 
+    @PutMapping("/{id}/cancel")
+    public Result<Claim> cancel(@PathVariable Long id, Authentication auth) {
+        Long userId = ((User) auth.getPrincipal()).getId();
+        return Result.success(claimService.cancelClaim(id, userId));
+    }
+
     @GetMapping("/post/{postId}")
     public Result<List<Claim>> byPost(@PathVariable Long postId) {
         return Result.success(claimService.getByPostId(postId));
