@@ -26,7 +26,7 @@ public class CreditScoreService {
     public void addScore(Long userId, int delta) {
         User user = userMapper.selectById(userId);
         if (user != null) {
-            int newScore = Math.max(0, Math.min(120, user.getCreditScore() + delta));
+            int newScore = Math.max(0, Math.min(100, user.getCreditScore() + delta));
             user.setCreditScore(newScore);
             userMapper.updateById(user);
         }

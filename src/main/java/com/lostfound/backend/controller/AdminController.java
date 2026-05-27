@@ -122,7 +122,7 @@ public class AdminController {
         requireAdmin(auth);
         User user = userMapper.selectById(id);
         if (user == null) throw new BusinessException(404, "用户不存在");
-        int newScore = Math.max(0, Math.min(120, user.getCreditScore() + delta));
+        int newScore = Math.max(0, Math.min(100, user.getCreditScore() + delta));
         user.setCreditScore(newScore);
         userMapper.updateById(user);
         return Result.success(null);
@@ -165,11 +165,16 @@ public class AdminController {
     public Result<Page<Post>> allPosts(Authentication auth,
                                        @RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "20") int size,
-                                       @RequestParam(required = false) Integer status) {
+                                       @RequestParam(required = false) Integer status,
+                                       @RequestParam(required = false) String keyword) {
         requireAdmin(auth);
         Page<Post> p = new Page<>(page, size);
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<Post>()
                 .eq(status != null, Post::getStatus, status)
+                .and(keyword != null && !keyword.isBlank(), w -> w
+                    .like(Post::getTitle, keyword)
+                    .or()
+                    .like(Post::getDescription, keyword))
                 .orderByDesc(Post::getCreateTime);
         return Result.success(postMapper.selectPage(p, wrapper));
     }
@@ -181,6 +186,15 @@ public class AdminController {
         if (post == null) throw new BusinessException(404, "帖子不存在");
         post.setStatus(4); // 已过期/归档
         postMapper.updateById(post);
+        return Result.success(null);
+    }
+
+    @DeleteMapping("/posts/{id}")
+    public Result<Void> deletePost(Authentication auth, @PathVariable Long id) {
+        requireAdmin(auth);
+        Post post = postMapper.selectById(id);
+        if (post == null) throw new BusinessException(404, "帖子不存在");
+        postMapper.deleteById(id);
         return Result.success(null);
     }
 
