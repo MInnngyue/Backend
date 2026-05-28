@@ -26,32 +26,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginVO login(LoginDTO dto) {
-        // 1. 查询用户
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, dto.getUsername())
         );
 
-        // 2. 用户不存在 → 模糊提示，防止枚举攻击
         if (user == null) {
             throw new BusinessException(401, "用户名或密码错误");
         }
 
-        // 3. ✅ 检查账号是否被禁用
+        // check ban
         if (user.getStatus() != null && user.getStatus() == 1) {
             throw new BusinessException(403, "账号已被禁用，请联系管理员");
         }
 
-        // 4. 验证密码
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BusinessException(401, "用户名或密码错误");
         }
 
-        // 5. 生成 Token
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
         log.info("==> 用户登录成功：{}", user.getUsername());
 
-        // 6. 返回登录信息
         return LoginVO.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
@@ -63,9 +58,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)  // ✅ 加事务
+    @Transactional(rollbackFor = Exception.class)
     public void register(RegisterDTO dto) {
-        // 1. 检查用户名是否已存在
         Long count = userMapper.selectCount(
                 new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, dto.getUsername())
@@ -74,7 +68,6 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(400, "用户名已存在");
         }
 
-        // 2. ✅ 检查邮箱是否已注册（如果DTO有email字段）
         if (dto.getEmail() != null) {
             Long emailCount = userMapper.selectCount(
                     new LambdaQueryWrapper<User>()
@@ -85,7 +78,6 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
-        // 3. 创建用户
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));

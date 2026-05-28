@@ -17,7 +17,7 @@ public class Claim {
     private Long postOwnerId;
     private Long matchId;
 
-    /** 0=待确认, 1=双方已确认, 2=已完结, 3=已取消 */
+    /* 0=待确认 1=一方确认 2=完结 3=取消 */
     private Integer status;
 
     private Integer ownerConfirmed;

@@ -24,10 +24,6 @@ public class UserController {
     @Autowired
     private PostMapper postMapper;
 
-    /**
-     * 获取当前登录用户信息
-     * GET /api/user/info
-     */
     @GetMapping("/info")
     public Result<UserInfoVO> info(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -49,10 +45,6 @@ public class UserController {
         return Result.success(vo);
     }
 
-    /**
-     * 更新个人资料
-     * PUT /api/user/profile
-     */
     @PutMapping("/profile")
     public Result<UserInfoVO> updateProfile(@RequestBody Map<String, Object> body, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -68,10 +60,6 @@ public class UserController {
         return info(authentication);
     }
 
-    /**
-     * 获取我的帖子列表
-     * GET /api/user/posts
-     */
     @GetMapping("/posts")
     public Result<List<Post>> myPosts(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "20") int size,

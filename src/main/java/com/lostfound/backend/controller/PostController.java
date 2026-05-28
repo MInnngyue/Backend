@@ -41,7 +41,6 @@ public class PostController {
         return Result.success(postService.publish(user.getId(), dto));
     }
 
-    /** 手动标记帖子为已完成（发布者操作） */
     @PutMapping("/{id}/complete")
     public Result<Void> complete(@PathVariable Long id, Authentication auth) {
         User user = (User) auth.getPrincipal();

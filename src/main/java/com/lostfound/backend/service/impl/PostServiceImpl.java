@@ -47,7 +47,6 @@ public class PostServiceImpl implements PostService {
 
         long total = postMapper.selectCount(wrapper);
         int offset = (query.getPage() - 1) * query.getPageSize();
-        // 安全：offset 和 pageSize 均为 int 类型，String.format %d 强制整数格式化
         List<Post> records = postMapper.selectList(
                 wrapper.last(String.format("LIMIT %d,%d", offset, query.getPageSize())));
 
@@ -62,13 +61,11 @@ public class PostServiceImpl implements PostService {
         if (post == null) {
             throw new BusinessException(404, "帖子不存在");
         }
-        // 增加浏览次数
         post.setViewCount(post.getViewCount() + 1);
         postMapper.updateById(post);
 
         PostVO vo = toVO(post);
-        // 加载完整图片列表
-        vo.setCoverImage(null); // detail 页不用 cover，用完整列表
+        vo.setCoverImage(null);
         return vo;
     }
 
@@ -91,7 +88,6 @@ public class PostServiceImpl implements PostService {
         post.setReviewStatus(0);
         postMapper.insert(post);
 
-        // 保存图片
         if (dto.getImages() != null) {
             for (int i = 0; i < dto.getImages().length; i++) {
                 PostImage img = new PostImage();
@@ -102,7 +98,7 @@ public class PostServiceImpl implements PostService {
             }
         }
 
-        // 异步触发匹配（异常不影响发布）
+        // async match, don't block publish
         try {
             matchingService.match(post);
         } catch (Exception e) {
@@ -140,7 +136,6 @@ public class PostServiceImpl implements PostService {
         post.setDescription(dto.getDescription());
         postMapper.updateById(post);
 
-        // 更新图片：只有提供了新图片才更新
         if (dto.getImages() != null && dto.getImages().length > 0) {
             postImageMapper.delete(new LambdaQueryWrapper<PostImage>()
                     .eq(PostImage::getPostId, post.getId()));
@@ -186,7 +181,6 @@ public class PostServiceImpl implements PostService {
         vo.setUserId(post.getUserId());
         vo.setCreateTime(post.getCreateTime());
 
-        // 发布者信息
         User user = userMapper.selectById(post.getUserId());
         if (user != null) {
             vo.setNickname(user.getNickname());
@@ -194,7 +188,6 @@ public class PostServiceImpl implements PostService {
             vo.setCreditScore(user.getCreditScore());
         }
 
-        // 所有图片
         List<PostImage> images = postImageMapper.selectList(new LambdaQueryWrapper<PostImage>()
                 .eq(PostImage::getPostId, post.getId())
                 .orderByAsc(PostImage::getSortOrder));

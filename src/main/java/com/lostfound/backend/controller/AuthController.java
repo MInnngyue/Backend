@@ -16,20 +16,12 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /**
-     * 登录
-     * POST /api/auth/login
-     */
     @PostMapping("/login")
     public Result<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
         LoginVO vo = authService.login(loginDTO);
         return Result.success(vo);
     }
 
-    /**
-     * 注册
-     * POST /api/auth/register
-     */
     @PostMapping("/register")
     public Result<Void> register(@Valid @RequestBody RegisterDTO registerDTO) {
         authService.register(registerDTO);

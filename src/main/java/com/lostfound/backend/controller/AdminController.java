@@ -22,7 +22,6 @@ public class AdminController {
     private final CategoryMapper categoryMapper;
     private final MessageMapper messageMapper;
 
-    // ============ 权限检查 ============
     private User requireAdmin(Authentication auth) {
         User user = (User) auth.getPrincipal();
         if (user.getRole() == null || user.getRole() != 1) {
@@ -31,9 +30,6 @@ public class AdminController {
         return user;
     }
 
-    // ============ 帖子审核 ============
-
-    /** 待审核帖子列表 */
     @GetMapping("/posts/pending")
     public Result<Page<Post>> pendingPosts(Authentication auth,
                                            @RequestParam(defaultValue = "1") int page,
@@ -48,7 +44,6 @@ public class AdminController {
         return Result.success(postMapper.selectPage(p, wrapper));
     }
 
-    /** 审核通过 */
     @PutMapping("/posts/{id}/approve")
     public Result<Void> approve(Authentication auth, @PathVariable Long id) {
         requireAdmin(auth);
@@ -59,7 +54,6 @@ public class AdminController {
         return Result.success(null);
     }
 
-    /** 审核拒绝 */
     @PutMapping("/posts/{id}/reject")
     public Result<Void> reject(Authentication auth, @PathVariable Long id, @RequestParam(defaultValue = "违规内容") String reason) {
         requireAdmin(auth);
@@ -71,8 +65,6 @@ public class AdminController {
         postMapper.updateById(post);
         return Result.success(null);
     }
-
-    // ============ 用户管理 ============
 
     @GetMapping("/users")
     public Result<Page<User>> users(Authentication auth,
@@ -128,8 +120,6 @@ public class AdminController {
         return Result.success(null);
     }
 
-    // ============ 数据字典 ============
-
     @GetMapping("/dict")
     public Result<List<Category>> dictList(Authentication auth, @RequestParam String type) {
         requireAdmin(auth);
@@ -159,8 +149,6 @@ public class AdminController {
         return Result.success(null);
     }
 
-    // ============ 归档管理 ============
-
     @GetMapping("/posts/all")
     public Result<Page<Post>> allPosts(Authentication auth,
                                        @RequestParam(defaultValue = "1") int page,
@@ -184,7 +172,7 @@ public class AdminController {
         requireAdmin(auth);
         Post post = postMapper.selectById(id);
         if (post == null) throw new BusinessException(404, "帖子不存在");
-        post.setStatus(4); // 已过期/归档
+        post.setStatus(4);
         postMapper.updateById(post);
         return Result.success(null);
     }
@@ -197,8 +185,6 @@ public class AdminController {
         postMapper.deleteById(id);
         return Result.success(null);
     }
-
-    // ============ 数据统计 ============
 
     @GetMapping("/stats")
     public Result<Map<String, Object>> stats(Authentication auth) {

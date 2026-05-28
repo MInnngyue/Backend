@@ -52,7 +52,7 @@ public class ClaimController {
         return Result.success(claimService.getByPostId(postId));
     }
 
-    /** 获取当前用户的所有认领记录（含进度信息） */
+    // 我的认领记录
     @GetMapping("/my")
     public Result<List<ClaimVO>> myClaims(Authentication auth) {
         Long userId = ((User) auth.getPrincipal()).getId();

@@ -15,7 +15,6 @@ public class Post {
 
     private Long userId;
 
-    /** 0=寻物启事, 1=失物招领 */
     private Integer type;
 
     private String itemCategory;
@@ -34,12 +33,12 @@ public class Post {
 
     private String description;
 
-    /** 0=进行中, 1=已匹配, 2=认领中, 3=已完结, 4=已过期, 5=已下架 */
+    /* 0=进行中 1=匹配 2=认领中 3=完结 4=过期 5=下架 */
     private Integer status;
 
     private Integer viewCount;
 
-    /** 0=待审核, 1=已通过, 2=已拒绝 */
+    /* 0=待审 1=通过 2=拒绝 */
     private Integer reviewStatus;
 
     private String reviewRemark;

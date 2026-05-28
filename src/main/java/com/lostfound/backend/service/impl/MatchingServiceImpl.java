@@ -33,12 +33,11 @@ public class MatchingServiceImpl implements MatchingService {
     public List<MatchResult> match(Post newPost) {
         List<MatchResult> results = new ArrayList<>();
 
-        // 查找7天内反向类型、进行中的帖子
-        int oppositeType = newPost.getType() == 0 ? 1 : 0;
+        int oppType = newPost.getType() == 0 ? 1 : 0;
         LocalDate cutoff = LocalDate.now().minusDays(MATCH_DAYS);
 
         List<Post> candidates = postMapper.selectList(new LambdaQueryWrapper<Post>()
-                .eq(Post::getType, oppositeType)
+                .eq(Post::getType, oppType)
                 .eq(Post::getStatus, 0)
                 .ge(Post::getLostTime, cutoff)
                 .ne(Post::getUserId, newPost.getUserId()));
@@ -46,7 +45,6 @@ public class MatchingServiceImpl implements MatchingService {
         for (Post candidate : candidates) {
             MatchResult result = computeScore(newPost, candidate);
             if (result.shouldNotify()) {
-                // 去重检查
                 Long count = matchRecordMapper.selectCount(new LambdaQueryWrapper<MatchRecord>()
                         .and(w -> w
                                 .eq(MatchRecord::getLostPostId, newPost.getType() == 0 ? newPost.getId() : candidate.getId())
@@ -54,7 +52,6 @@ public class MatchingServiceImpl implements MatchingService {
                         ));
                 if (count > 0) continue;
 
-                // 保存匹配记录
                 MatchRecord record = new MatchRecord();
                 record.setLostPostId(newPost.getType() == 0 ? newPost.getId() : candidate.getId());
                 record.setFoundPostId(newPost.getType() == 1 ? newPost.getId() : candidate.getId());
@@ -65,11 +62,9 @@ public class MatchingServiceImpl implements MatchingService {
                 record.setTimeScore(result.timeScore());
                 matchRecordMapper.insert(record);
 
-                // 更新双方帖子状态为已匹配
                 updatePostStatus(newPost.getId());
                 updatePostStatus(candidate.getId());
 
-                // 发送通知给双方
                 sendMatchNotification(newPost.getUserId(), result, newPost, candidate);
                 sendMatchNotification(candidate.getUserId(), result, candidate, newPost);
 
@@ -80,7 +75,7 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
-    @Scheduled(cron = "0 0 2 * * ?") // 每天凌晨2点
+    @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
     public void scheduledMatch() {
         log.info("开始每日补偿匹配...");
@@ -101,19 +96,16 @@ public class MatchingServiceImpl implements MatchingService {
     private MatchResult computeScore(Post p1, Post p2) {
         int itemScore = 0, colorScore = 0, locationScore = 0, timeScore = 0;
 
-        // 物品大类：完全一致40分，否则0（一票否决）
         if (p1.getItemCategory() != null && p1.getItemCategory().equals(p2.getItemCategory())) {
             itemScore = 40;
         } else {
-            return new MatchResult(null, 0, 0, 0, 0, 0); // 大类不匹配，直接返回0
+            return new MatchResult(null, 0, 0, 0, 0, 0);
         }
 
-        // 颜色：完全一致30分
         if (p1.getColor() != null && p1.getColor().equals(p2.getColor())) {
             colorScore = 30;
         }
 
-        // 地点：三级全一致20分，两级10分，一级5分
         boolean campusMatch = p1.getLocationCampus() != null && p1.getLocationCampus().equals(p2.getLocationCampus());
         boolean areaMatch = p1.getLocationArea() != null && p1.getLocationArea().equals(p2.getLocationArea());
         boolean detailMatch = p1.getLocationDetail() != null && p1.getLocationDetail().equals(p2.getLocationDetail());
@@ -122,7 +114,6 @@ public class MatchingServiceImpl implements MatchingService {
         else if (campusMatch && areaMatch) locationScore = 10;
         else if (campusMatch) locationScore = 5;
 
-        // 时间差：≤1天10分，1-3天5分，>3天0分
         if (p1.getLostTime() != null && p2.getLostTime() != null) {
             long daysDiff = Math.abs(ChronoUnit.DAYS.between(p1.getLostTime(), p2.getLostTime()));
             if (daysDiff <= 1) timeScore = 10;
